@@ -10,15 +10,7 @@ const EXAMPLES = [
   "a snake game with a high score",
 ];
 
-/**
- * Stage thresholds are calibrated to measured behaviour: Codex generation
- * dominates at roughly 60-120s while the sandbox boots alongside it.
- */
-const STEPS = [
-  { at: 0, label: "Codex is writing your app…" },
-  { at: 10, label: "Spinning up a Daytona sandbox…" },
-  { at: 80, label: "Serving it live from the sandbox…" },
-];
+type Stage = { key: string; label: string };
 
 type Result = {
   previewUrl: string;
@@ -35,6 +27,7 @@ export default function Home() {
   const [result, setResult] = useState<Result | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showSource, setShowSource] = useState(false);
+  const [stages, setStages] = useState<Stage[]>([]);
   const startedRef = useRef(0);
 
   useEffect(() => {
@@ -55,23 +48,56 @@ export default function Home() {
     setError(null);
     setResult(null);
     setShowSource(false);
+    setStages([]);
     try {
       const res = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ prompt: trimmed }),
       });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Generation failed.");
-      setResult(data);
+
+      // Validation failures come back as plain JSON with a non-2xx status.
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error ?? "Generation failed.");
+      }
+      if (!res.body) throw new Error("No response stream.");
+
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      // Newline-delimited JSON: a chunk can split a line, so only whole lines
+      // are parsed and the remainder is carried forward.
+      for (;;) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          const event = JSON.parse(line);
+          if (event.type === "stage") {
+            setStages((prev) =>
+              prev.some((s) => s.key === event.key)
+                ? prev.map((s) => (s.key === event.key ? { ...s, label: event.label } : s))
+                : [...prev, { key: event.key, label: event.label }],
+            );
+          } else if (event.type === "done") {
+            setResult(event);
+          } else if (event.type === "error") {
+            throw new Error(event.error);
+          }
+        }
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Something went wrong.");
     } finally {
       setBusy(false);
     }
   }
-
-  const activeStep = STEPS.reduce((acc, s, i) => (elapsed >= s.at ? i : acc), 0);
 
   return (
     <main className={styles.shell}>
@@ -133,11 +159,11 @@ export default function Home() {
             </span>
           </div>
           <div className={styles.steps}>
-            {STEPS.map((s, i) => (
+            {stages.map((s, i) => (
               <div
-                key={s.label}
+                key={s.key}
                 className={styles.step}
-                data-state={i < activeStep ? "done" : i === activeStep ? "active" : "idle"}
+                data-state={i === stages.length - 1 ? "active" : "done"}
               >
                 <span className={styles.dot} />
                 {s.label}

@@ -31,6 +31,11 @@ export interface Runner {
    * provisioning would otherwise leave a paid sandbox running forever.
    */
   cleanup(prepared: unknown): Promise<void>;
+  /**
+   * Human-readable description of what was actually provisioned, reported to
+   * the client so progress reflects reality rather than a timer.
+   */
+  describe(prepared: unknown): string;
 }
 
 export function isDaytonaConfigured(): boolean {
@@ -77,6 +82,10 @@ export class DaytonaRunner implements Runner {
       console.error("[conjure] sandbox cleanup failed:", (error as Error)?.message);
     }
   }
+
+  describe(prepared: unknown): string {
+    return `Daytona sandbox ${(prepared as Sandbox)?.id ?? "?"} ready`;
+  }
 }
 
 /**
@@ -100,6 +109,10 @@ export class MockRunner implements Runner {
 
   async cleanup(): Promise<void> {
     // Nothing provisioned, nothing to tear down.
+  }
+
+  describe(): string {
+    return "Local preview — no Daytona key set";
   }
 }
 
