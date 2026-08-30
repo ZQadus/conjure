@@ -67,7 +67,23 @@ export async function generateApp(userPrompt: string): Promise<string> {
   ];
 
   return new Promise<string>((resolve, reject) => {
-    const child = spawn("codex", args, { stdio: ["pipe", "pipe", "pipe"] });
+    // `detached` makes the child a process-group leader so the whole group can
+    // be signalled. Killing the `codex` wrapper alone leaves the underlying
+    // binary running: an observed leak, where a survivor from a timed-out run
+    // contended with the next one and pushed a normally ~110s generation past
+    // the timeout.
+    const child = spawn("codex", args, {
+      stdio: ["pipe", "pipe", "pipe"],
+      detached: true,
+    });
+
+    const killTree = () => {
+      try {
+        if (child.pid) process.kill(-child.pid, "SIGKILL");
+      } catch {
+        child.kill("SIGKILL");
+      }
+    };
 
     let stdout = "";
     let stderr = "";
@@ -81,7 +97,7 @@ export async function generateApp(userPrompt: string): Promise<string> {
     };
 
     const timer = setTimeout(() => {
-      child.kill("SIGKILL");
+      killTree();
       finish(() =>
         reject(
           new CodexError(
