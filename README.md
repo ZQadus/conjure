@@ -123,6 +123,27 @@ one class.
 - The API reports which stage failed (`codex` or `daytona`), so the UI never shows a bare
   "something went wrong".
 
+## Known limits before this is deployed
+
+Conjure was built to run locally for a single user. A second-engine review (OpenAI Codex, on the
+implementation commit) flagged three things that are **not exploitable on localhost but must be
+fixed before this is exposed to untrusted callers**. They are listed here rather than quietly left
+in the code:
+
+1. **Prompt injection could steer Codex into reading local files.** The Codex child inherits the
+   server's working directory and environment. Read-only sandboxing stops writes but not reads, so
+   a crafted prompt could in principle coax file contents into the returned HTML. Fix: spawn Codex
+   with `cwd` set to an empty scratch directory and a minimal env allowlist.
+2. **`/api/generate` is unauthenticated and expensive.** Each call starts a sandbox and a Codex
+   process that can run for up to 180s. Deployed as-is, a small request flood would exhaust local
+   processes and paid sandbox capacity. Fix: auth plus a per-client and global concurrency limit.
+3. **A failed generation can orphan a sandbox.** The sandbox is provisioned in parallel with
+   generation, so if Codex times out the handle is dropped without a delete call, and Daytona does
+   not auto-delete by default. Fix: retain the handle and delete it on any unsuccessful request.
+
+A fourth finding — that the mock's `data:` URL broke "Open in new tab" in Chrome — was already
+fixed in `87331e2` before the review ran; the review independently reached the same conclusion.
+
 ## Screenshot
 
 <!-- screenshot / demo gif goes here -->
