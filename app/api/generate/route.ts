@@ -96,6 +96,7 @@ export async function POST(request: Request) {
         send({
           type: "done",
           previewUrl: result.previewUrl,
+          embedUrl: result.embedUrl,
           code: html,
           sandboxId: result.sandboxId,
           mocked: result.mocked,

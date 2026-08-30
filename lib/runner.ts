@@ -1,6 +1,6 @@
 import { Daytona, type Sandbox } from "@daytona/sdk";
 import { SANDBOX_PORT } from "./config";
-import { savePreview } from "./previewStore";
+import { savePreview, saveProxyTarget } from "./previewStore";
 
 /**
  * Where a generated app gets run.
@@ -15,7 +15,17 @@ import { savePreview } from "./previewStore";
  * credentials.
  */
 export interface RunResult {
+  /** The sandbox's own public URL — shown to the user and opened in a new tab. */
   previewUrl: string;
+  /**
+   * Same-origin URL to embed in an iframe.
+   *
+   * Separate from previewUrl because Daytona answers browser-shaped requests
+   * with an interstitial warning page, bypassable only by request headers that
+   * an `<iframe src>` cannot set. This points at our proxy route, which sends
+   * them. The app is still served by the sandbox either way.
+   */
+  embedUrl: string;
   sandboxId: string;
   mocked: boolean;
 }
@@ -69,7 +79,14 @@ export class DaytonaRunner implements Runner {
     });
 
     const preview = await sandbox.getPreviewLink(SANDBOX_PORT);
-    return { previewUrl: preview.url, sandboxId: sandbox.id, mocked: false };
+    saveProxyTarget(sandbox.id, preview.url, preview.token);
+
+    return {
+      previewUrl: preview.url,
+      embedUrl: `/preview/${sandbox.id}`,
+      sandboxId: sandbox.id,
+      mocked: false,
+    };
   }
 
   async cleanup(prepared: unknown): Promise<void> {
@@ -104,7 +121,8 @@ export class MockRunner implements Runner {
   async finish(_prepared: unknown, html: string): Promise<RunResult> {
     const id = `mock-${Math.random().toString(36).slice(2, 10)}`;
     savePreview(id, html);
-    return { previewUrl: `/preview/${id}`, sandboxId: id, mocked: true };
+    const url = `/preview/${id}`;
+    return { previewUrl: url, embedUrl: url, sandboxId: id, mocked: true };
   }
 
   async cleanup(): Promise<void> {

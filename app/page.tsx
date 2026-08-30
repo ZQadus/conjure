@@ -27,6 +27,7 @@ type Stage = { key: string; label: string };
 
 type Result = {
   previewUrl: string;
+  embedUrl: string;
   code: string;
   sandboxId: string;
   mocked: boolean;
@@ -363,9 +364,13 @@ export default function Home() {
             <pre className={styles.source}>{result.code}</pre>
           ) : (
             <div className={styles.frameWrap}>
+              {/* Points at the same-origin proxy, not the sandbox URL directly:
+                  Daytona serves an interstitial warning to browser requests and
+                  an iframe cannot send the header that skips it. The sandbox is
+                  still what runs and serves the app. */}
               <iframe
                 className={styles.frame}
-                src={result.previewUrl}
+                src={result.embedUrl}
                 title="Your conjured app"
                 sandbox="allow-scripts allow-forms allow-modals"
               />
