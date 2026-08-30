@@ -5,7 +5,8 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start"
+    "start": "next start",
+    "verify:daytona": "node scripts/verify-daytona.mjs"
   },
   "dependencies": {
     "@daytona/sdk": "^0.207.0",

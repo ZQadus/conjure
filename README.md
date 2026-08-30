@@ -101,6 +101,21 @@ labels which runner produced the result, so a mock can never be mistaken for a l
 `CODEX_REASONING_EFFORT` is a real speed/quality trade: measured ~103s at `medium`. Raise it if
 you want better apps and can wait.
 
+### Verifying the Daytona leg on its own
+
+```bash
+DAYTONA_API_KEY=your_key npm run verify:daytona
+```
+
+Runs the exact sandbox lifecycle the app uses — create a public sandbox, upload a document, serve
+it, resolve the preview link — then fetches that URL **unauthenticated** and asserts a marker came
+back. A preview URL that merely exists proves nothing; this proves it serves. The sandbox is
+deleted either way. Exits non-zero on failure, so CI can gate on it.
+
+> The API key must have **sandbox create/write** permission. A read-scoped key authenticates fine
+> and returns `200` on `GET /sandbox`, then fails with `403 Access denied` on create — an easy
+> failure to misread as broken code.
+
 ## Architecture
 
 ```
