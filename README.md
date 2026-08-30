@@ -87,10 +87,10 @@ DAYTONA_API_KEY=your_key_here     # from https://app.daytona.io
 CODEX_REASONING_EFFORT=low        # low | medium | high — default low
 ```
 
-**Without `DAYTONA_API_KEY` the app still runs.** It falls back to a mock runner that returns the
-generated app as a data URL, so the entire describe → generate → preview flow works end to end
-with no credentials. Codex is real in both modes; only the sandbox is stubbed. The UI labels
-which runner produced the result, so a mock can never be mistaken for a live sandbox.
+**Without `DAYTONA_API_KEY` the app still runs.** It falls back to a mock runner that serves the
+generated app from `/preview/<id>`, so the entire describe → generate → open-the-URL flow works
+end to end with no credentials. Codex is real in both modes; only the sandbox is stubbed. The UI
+labels which runner produced the result, so a mock can never be mistaken for a live sandbox.
 
 `CODEX_REASONING_EFFORT` is a real speed/quality trade: measured ~103s at `medium`. Raise it if
 you want better apps and can wait.
