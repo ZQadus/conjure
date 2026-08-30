@@ -1,49 +1,64 @@
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg: #07070a;
+  --panel: #0e0e13;
+  --border: #1d1d26;
+  --border-lit: #2e2e3d;
+  --text: #ececf1;
+  --muted: #8b8b9c;
+  --faint: #5a5a6b;
+  --accent: #a78bfa;
+  --accent-deep: #7c5cf0;
+  --accent-glow: rgba(139, 108, 255, 0.28);
+  --danger: #ff6b6b;
+  --ok: #4ade80;
+  --radius: 14px;
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, system-ui, sans-serif;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+* { box-sizing: border-box; }
 
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
+html, body {
   padding: 0;
   margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(900px 500px at 50% -10%, rgba(124, 92, 240, 0.16), transparent 70%),
+    radial-gradient(600px 400px at 85% 15%, rgba(56, 189, 248, 0.06), transparent 70%);
+  pointer-events: none;
+  z-index: 0;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+button, input, textarea { font-family: inherit; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes pulse-dot {
+  0%, 100% { opacity: 0.35; transform: scale(0.85); }
+  50% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes sheen {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
