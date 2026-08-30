@@ -39,7 +39,18 @@ export async function POST(request: Request) {
   prepared.catch(() => {});
 
   try {
-    const html = await generateApp(prompt.trim());
+    // Provisioning usually fails fast (a bad key rejects in well under a
+    // second) while generation takes ~90s. Racing them means a sandbox failure
+    // surfaces immediately instead of after a long wait for work we are about
+    // to throw away. The success branch never settles, so when provisioning is
+    // fine the generation still governs the timing.
+    const html = await Promise.race([
+      generateApp(prompt.trim()),
+      prepared.then<never, never>(
+        () => new Promise<never>(() => {}),
+        (error) => Promise.reject(error),
+      ),
+    ]);
     const result = await runner.finish(await prepared, html);
 
     return NextResponse.json({
