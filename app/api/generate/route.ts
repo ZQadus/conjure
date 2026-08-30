@@ -31,14 +31,14 @@ export async function POST(request: Request) {
   const startedAt = Date.now();
   const runner = getRunner();
 
-  try {
-    // Boot the sandbox while Codex writes the code. Independent work, so it
-    // overlaps rather than queues.
-    const prepared = runner.prepare();
-    // Without this, a sandbox failure while Codex is still running surfaces as
-    // an unhandled rejection before we ever get to await it.
-    prepared.catch(() => {});
+  // Boot the sandbox while Codex writes the code. Independent work, so it
+  // overlaps rather than queues.
+  const prepared = runner.prepare();
+  // Without this, a sandbox failure while Codex is still running surfaces as
+  // an unhandled rejection before we ever get to await it.
+  prepared.catch(() => {});
 
+  try {
     const html = await generateApp(prompt.trim());
     const result = await runner.finish(await prepared, html);
 
@@ -50,6 +50,9 @@ export async function POST(request: Request) {
       elapsedMs: Date.now() - startedAt,
     });
   } catch (error) {
+    // Generation failed after provisioning started. Daytona does not
+    // auto-delete, so an un-torn-down sandbox would bill indefinitely.
+    await runner.cleanup(await prepared.catch(() => null));
     const isCodex = error instanceof CodexError;
     const message =
       error instanceof Error ? error.message : "Something went wrong.";

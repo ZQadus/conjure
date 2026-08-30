@@ -25,6 +25,12 @@ export interface Runner {
   prepare(): Promise<unknown>;
   /** Serve `html` on the prepared target and return its public URL. */
   finish(prepared: unknown, html: string): Promise<RunResult>;
+  /**
+   * Tear down a prepared target that will not be used.
+   * Daytona does not auto-delete by default, so a generation that fails after
+   * provisioning would otherwise leave a paid sandbox running forever.
+   */
+  cleanup(prepared: unknown): Promise<void>;
 }
 
 export function isDaytonaConfigured(): boolean {
@@ -60,6 +66,17 @@ export class DaytonaRunner implements Runner {
     const preview = await sandbox.getPreviewLink(SANDBOX_PORT);
     return { previewUrl: preview.url, sandboxId: sandbox.id, mocked: false };
   }
+
+  async cleanup(prepared: unknown): Promise<void> {
+    const sandbox = prepared as Sandbox | null;
+    if (!sandbox) return;
+    try {
+      await sandbox.delete();
+    } catch (error) {
+      // Never let cleanup mask the original failure.
+      console.error("[conjure] sandbox cleanup failed:", (error as Error)?.message);
+    }
+  }
 }
 
 /**
@@ -79,6 +96,10 @@ export class MockRunner implements Runner {
     const id = `mock-${Math.random().toString(36).slice(2, 10)}`;
     savePreview(id, html);
     return { previewUrl: `/preview/${id}`, sandboxId: id, mocked: true };
+  }
+
+  async cleanup(): Promise<void> {
+    // Nothing provisioned, nothing to tear down.
   }
 }
 

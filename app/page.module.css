@@ -207,6 +207,49 @@
   animation: fade-up 0.5s ease both;
 }
 
+/* Daytona is the point of the product, so the banner says so plainly. */
+.runBanner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
+  margin-bottom: 12px;
+  border-radius: var(--radius);
+  border: 1px solid rgba(74, 222, 128, 0.28);
+  background: rgba(74, 222, 128, 0.07);
+}
+
+.runBanner[data-mocked="true"] {
+  border-color: var(--border-lit);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.runBanner[data-mocked="true"] .live { color: var(--muted); }
+.runBanner[data-mocked="true"] .dot { background: var(--faint); animation: none; }
+
+.sandboxId {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.sandboxUrl {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.sandboxUrl:hover { text-decoration: underline; }
+
 .resultBar {
   display: flex;
   align-items: center;

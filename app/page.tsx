@@ -15,9 +15,9 @@ const EXAMPLES = [
  * dominates at roughly 60-120s while the sandbox boots alongside it.
  */
 const STEPS = [
-  { at: 0, label: "Codex is writing your app" },
-  { at: 12, label: "Daytona sandbox booting alongside it" },
-  { at: 95, label: "Uploading and serving it live" },
+  { at: 0, label: "Codex is writing your app…" },
+  { at: 10, label: "Spinning up a Daytona sandbox…" },
+  { at: 80, label: "Serving it live from the sandbox…" },
 ];
 
 type Result = {
@@ -155,12 +155,30 @@ export default function Home() {
 
       {result && (
         <section className={styles.result}>
-          <div className={styles.resultBar}>
+          <div className={styles.runBanner} data-mocked={result.mocked}>
             <span className={styles.live}>
               <span className={styles.dot} />
-              {result.mocked ? "Preview (mock runner)" : "Live on Daytona"}
+              {result.mocked
+                ? "Local preview — no Daytona key set"
+                : "Running securely in a Daytona sandbox"}
             </span>
-            <span className={styles.timer}>{(result.elapsedMs / 1000).toFixed(1)}s</span>
+            <code className={styles.sandboxId}>{result.sandboxId}</code>
+            {!result.mocked && (
+              <a
+                className={styles.sandboxUrl}
+                href={result.previewUrl}
+                target="_blank"
+                rel="noreferrer"
+              >
+                {result.previewUrl}
+              </a>
+            )}
+          </div>
+
+          <div className={styles.resultBar}>
+            <span className={styles.timer}>
+              built in {(result.elapsedMs / 1000).toFixed(1)}s
+            </span>
             <span className={styles.spacer} />
             <button className={styles.link} onClick={() => setShowSource((v) => !v)}>
               {showSource ? "Show app" : "View source"}
