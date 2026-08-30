@@ -1,5 +1,6 @@
 import { Daytona, type Sandbox } from "@daytona/sdk";
 import { SANDBOX_PORT } from "./config";
+import { savePreview } from "./previewStore";
 
 /**
  * Where a generated app gets run.
@@ -61,7 +62,13 @@ export class DaytonaRunner implements Runner {
   }
 }
 
-/** Stand-in exercising the same interface without credentials. */
+/**
+ * Stand-in exercising the same interface without credentials.
+ *
+ * Serves through /preview/<id> rather than a `data:` URL so the result behaves
+ * like a real one — Chrome blocks top-level navigation to `data:` URLs, which
+ * would make "Open in new tab" silently do nothing.
+ */
 export class MockRunner implements Runner {
   async prepare(): Promise<null> {
     await new Promise((r) => setTimeout(r, 400));
@@ -69,11 +76,9 @@ export class MockRunner implements Runner {
   }
 
   async finish(_prepared: unknown, html: string): Promise<RunResult> {
-    return {
-      previewUrl: `data:text/html;charset=utf-8,${encodeURIComponent(html)}`,
-      sandboxId: `mock-${Math.random().toString(36).slice(2, 10)}`,
-      mocked: true,
-    };
+    const id = `mock-${Math.random().toString(36).slice(2, 10)}`;
+    savePreview(id, html);
+    return { previewUrl: `/preview/${id}`, sandboxId: id, mocked: true };
   }
 }
 
