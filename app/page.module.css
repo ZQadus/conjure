@@ -198,6 +198,146 @@
 
 .step[data-state="done"] .dot { background: var(--ok); }
 
+/* ---------- live build screen ---------- */
+
+.build {
+  width: 100%;
+  max-width: 1180px;
+  margin-top: 34px;
+  animation: fade-up 0.4s ease both;
+}
+
+.buildHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.counters {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  align-items: stretch;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 460px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.paneHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.paneLabel {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.paneNote { font-size: 11px; color: var(--faint); }
+
+.stages { display: inline-flex; gap: 6px; }
+
+.pip {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--border-lit);
+}
+
+.pip[data-state="active"] { background: var(--accent); animation: pulse-dot 1.3s ease-in-out infinite; }
+.pip[data-state="done"] { background: var(--ok); }
+
+.editor,
+.thinking {
+  flex: 1;
+  min-height: 0;
+  margin: 0;
+  padding: 14px 16px;
+  overflow: auto;
+  font-family: var(--mono);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+  scrollbar-width: thin;
+}
+
+.editor { color: #c9c9d6; }
+
+.thinking { display: flex; flex-direction: column; gap: 6px; }
+
+.thinkingLine {
+  margin: 0;
+  color: var(--faint);
+  transition: color 0.3s;
+}
+
+.thinkingLine[data-latest="true"] { color: var(--muted); }
+
+/* Sits inline after the last character, so it tracks the writing position. */
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 13px;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  animation: blink 1s steps(2, start) infinite;
+}
+
+.previewBody { flex: 1; min-height: 0; background: #fff; }
+
+.previewIdle {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--panel);
+}
+
+.orb {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 32% 30%, var(--accent), transparent 68%);
+  animation: pulse-dot 1.8s ease-in-out infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@media (max-width: 900px) {
+  .split { grid-template-columns: 1fr; }
+  .pane { height: 340px; }
+}
+
 /* ---------- result ---------- */
 
 .result {

@@ -45,8 +45,20 @@ export async function POST(request: Request) {
     async start(controller) {
       const startedAt = Date.now();
       const runner = getRunner();
-      const send = (event: Record<string, unknown>) =>
-        controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+
+      // Codex keeps writing for a moment after a sandbox failure has already
+      // closed the stream, and enqueueing onto a closed controller throws.
+      // Guarding here keeps a late chunk from turning a clean error into an
+      // unhandled rejection.
+      let closed = false;
+      const send = (event: Record<string, unknown>) => {
+        if (closed) return;
+        try {
+          controller.enqueue(encoder.encode(JSON.stringify(event) + "\n"));
+        } catch {
+          closed = true;
+        }
+      };
 
       // Boot the sandbox while Codex writes the code. Independent work, so it
       // overlaps rather than queues.
@@ -67,7 +79,11 @@ export async function POST(request: Request) {
         // wait for work we are about to throw away. The success branch never
         // settles, so generation still governs the timing.
         const html = await Promise.race([
-          generateApp(text),
+          generateApp(
+            text,
+            (chunk) => send({ type: "code", text: chunk }),
+            (line) => send({ type: "thinking", text: line }),
+          ),
           prepared.then<never, never>(
             () => new Promise<never>(() => {}),
             (error) => Promise.reject(error),
@@ -104,7 +120,10 @@ export async function POST(request: Request) {
           stage: isCodex ? "codex" : isDaytonaConfigured() ? "daytona" : "unknown",
         });
       } finally {
-        controller.close();
+        if (!closed) {
+          closed = true;
+          controller.close();
+        }
       }
     },
   });
