@@ -8,11 +8,13 @@ URL, rendered live in the page.
 
 No templates. No component library. The app you get did not exist sixty seconds ago.
 
-> **Status, honestly:** the Codex half is real and verified end to end — it writes working apps and
-> you get an openable URL. The Daytona half is fully implemented (`lib/runner.ts`) and its client
-> path is verified up to authentication, but it has not yet been run against a live Daytona
-> account. Without a `DAYTONA_API_KEY` the app falls back to a local runner and labels every
-> result as such, so a mock is never passed off as a live sandbox.
+> **Verified end to end.** Prompt: *"a pomodoro timer with a circular progress ring"* → Codex wrote
+> 20,175 bytes of working HTML → sandbox `f054452a-f7db-4c08-b8be-2c698f025312` served it at
+> `https://3000-f054452a-….daytonaproxy01.eu`, returning **HTTP 200, 20,178 bytes** to an
+> *unauthenticated* request from outside. 112.7s end to end.
+>
+> Without a `DAYTONA_API_KEY` the app falls back to a local runner and labels every result as such,
+> so a mock is never passed off as a live sandbox.
 
 ---
 
@@ -115,6 +117,12 @@ deleted either way. Exits non-zero on failure, so CI can gate on it.
 > The API key must have **sandbox create/write** permission. A read-scoped key authenticates fine
 > and returns `200` on `GET /sandbox`, then fails with `403 Access denied` on create — an easy
 > failure to misread as broken code.
+
+**This script passing does not prove the app works.** It runs under plain Node; the app runs
+through the bundler. The Daytona SDK reaches for `form-data` via a dynamic require, which
+Turbopack strips — so the route failed at upload (`Module "form-data" is not available in the
+"node" runtime`) while this script passed in 5.8s. `serverExternalPackages: ["@daytona/sdk"]` in
+`next.config.ts` is what actually fixes it. Only the route proves the route.
 
 ## Architecture
 
