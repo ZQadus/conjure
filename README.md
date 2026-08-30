@@ -8,6 +8,12 @@ URL, rendered live in the page.
 
 No templates. No component library. The app you get did not exist sixty seconds ago.
 
+> **Status, honestly:** the Codex half is real and verified end to end — it writes working apps and
+> you get an openable URL. The Daytona half is fully implemented (`lib/runner.ts`) and its client
+> path is verified up to authentication, but it has not yet been run against a live Daytona
+> account. Without a `DAYTONA_API_KEY` the app falls back to a local runner and labels every
+> result as such, so a mock is never passed off as a live sandbox.
+
 ---
 
 ## Why this shape
